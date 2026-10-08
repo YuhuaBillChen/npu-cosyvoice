@@ -1,0 +1,35 @@
+# torch/torchaudio (CPU) are installed first, see docker/Dockerfile
+fastapi>=0.115.0,<1.0.0
+uvicorn>=0.34.0,<1.0.0
+python-multipart>=0.0.20,<1.0.0
+# CosyVoice3 runtime; the versions it was measured with. transformers must stay on 4.51.x: 5.x builds the Qwen2 LM
+# in the config's bf16 dtype and the upstream code then mixes dtypes.
+transformers==4.51.3
+x-transformers==2.31.0
+conformer==0.3.2
+diffusers==0.29.0
+einops==0.8.2
+HyperPyYAML==1.2.3
+hydra-core==1.3.2
+omegaconf==2.3.1
+inflect==7.5.0
+librosa==0.11.0
+lightning==2.6.6
+matplotlib==3.11.2
+modelscope==1.40.1
+onnxruntime==1.30.0
+openai-whisper==20250625
+pyarrow==25.0.1
+pyworld==0.3.5
+soundfile==0.14.0
+numpy==1.26.4
+wetext==0.1.8
+wget==3.2
+gdown==6.4.0
+# GGUF export of the LM backbone (npu_cosyvoice.llm)
+sentencepiece==0.2.2
+safetensors==0.8.0
+# imported by third_party/Matcha-TTS, which is on PYTHONPATH rather than installed
+rich==15.0.0
+pandas==2.3.3
+Cython==3.3.0

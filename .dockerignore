@@ -1,0 +1,9 @@
+.git
+third_party
+aot
+weights
+pretrained_models
+**/__pycache__
+**/*.so
+*.gguf
+*.wav

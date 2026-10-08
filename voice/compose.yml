@@ -1,0 +1,69 @@
+# Voice for any chat model: OpenAI-compatible TTS (CosyVoice3) and STT (whisper-xdna) on one
+# Ryzen AI NPU, both on http://localhost:${VOICE_PORT:-8000}/v1. See voice/README.md.
+#
+#   export RENDER_GID=$(getent group render | cut -d: -f3)
+#   docker compose -f voice/compose.yml run --rm setup     # once
+#   docker compose -f voice/compose.yml up -d              # TTS only
+#   docker compose -f voice/compose.yml --profile stt up -d  # TTS + STT
+
+x-npu: &npu
+  devices:
+    - /dev/accel/accel0
+  group_add:
+    - "${RENDER_GID:-992}"
+  cap_add:
+    - IPC_LOCK
+  ulimits:
+    memlock: -1
+
+services:
+  setup:
+    profiles: [setup]
+    build: {context: .., dockerfile: docker/Dockerfile, target: voice}
+    image: npu-cosyvoice-voice
+    command: bash voice/setup.sh
+    environment:
+      NPU_DEVICE: "${NPU_DEVICE:-npu1}"
+    volumes:
+      - data:/data
+
+  voice:
+    <<: *npu
+    build: {context: .., dockerfile: docker/Dockerfile, target: voice}
+    image: npu-cosyvoice-voice
+    ports:
+      # no authentication: VOICE_BIND=127.0.0.1 keeps it on this machine
+      - "${VOICE_BIND:-0.0.0.0}:${VOICE_PORT:-8000}:8000"
+    environment:
+      # without the stt profile, /v1/audio/transcriptions answers 502; set STT_URL= to make it 503
+      STT_URL: "${STT_URL-http://whisper:8090}"
+      MALLOC_ARENA_MAX: "2"
+    volumes:
+      - data:/data
+    restart: unless-stopped
+
+  whisper:
+    <<: *npu
+    profiles: [stt]
+    # whisper-xdna (https://github.com/drakosha/whisper-xdna), the build this was tested with
+    image: ghcr.io/drakosha/npu-whisper@sha256:04291377e5266717ecb9e5c889378e93d798d5b9a7b8ce2a41ba7116eba052a4
+    command: /opt/npu-whisper/refenv/bin/python -u /voice/whisper_entry.py
+    environment:
+      PYTHONPATH: /usr/lib/python3/dist-packages
+      PEANO_INSTALL_DIR: /opt/mlir-aie/ironenv/lib/python3.13/site-packages/llvm-aie
+      NPU_STT_MAX_CTX: "5"          # XDNA1 has 6 contexts; the TTS keeps one
+      NPU_STT_MODEL: large-v3-turbo
+      NPU_STT_LANG: "${STT_LANGUAGE:-en}"
+      NPU_STT_LADDER: "768,1500"    # each extra audio length is a compiled overlay; switching costs seconds
+      NPU_STT_DEFAULT_CTX: "768"
+      NPU_STT_TORCH_THREADS: "4"    # the decoder runs on the CPU; leave cores for the LM and the chat model
+    volumes:
+      - ./whisper_entry.py:/voice/whisper_entry.py:ro
+      - whisper-models:/root/.cache/whisper
+      - whisper-aot:/opt/npu-whisper/aot
+    restart: unless-stopped
+
+volumes:
+  data:
+  whisper-models:
+  whisper-aot:
