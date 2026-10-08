@@ -111,16 +111,16 @@ document.addEventListener('DOMContentLoaded',function(){setLang(document.documen
   <h2><span class="en">Numbers</span><span class="zh">数据</span></h2>
   <table class="en">
     <tr><th>measurement</th><th>result</th></tr>
-    <tr><td>one DiT block (the unit of work in the flow decoder), 956 frames</td><td>CPU bf16 20 ms → NPU int8 <b>7.4 ms</b></td></tr>
+    <tr><td>one DiT block (the unit of work in the flow decoder), 956 frames</td><td>CPU bf16, 8 threads 20 ms → NPU int8, 6 host threads <b>7.4 ms</b></td></tr>
     <tr><td>quality: mel error vs bf16 at 10 flow steps</td><td>NPU int8 at 10 steps <b>3.0%</b>; a CPU setup has to drop to 5 steps to keep up, which costs 7.4%</td></tr>
-    <tr><td>real-time factor of a sentence-by-sentence deployment (synthesis time ÷ audio length)</td><td>CPU flow 1.44 → NPU flow <b>0.64</b>; next to a 27B LLM generating on the same chip: 2.13 → <b>1.02</b></td></tr>
+    <tr><td>real-time factor of a sentence-by-sentence deployment (synthesis time ÷ audio length)</td><td>same setup: CPU flow 1.44 → NPU flow <b>0.84</b> (with a 27B LLM generating on the same chip: 2.13 → <b>1.33</b>); with the text model and flow pipelined: <b>0.64</b> (<b>1.02</b>)</td></tr>
     <tr><td>STT next to a speaking TTS</td><td>within 3% of STT alone</td></tr>
   </table>
   <table class="zh">
     <tr><th>测量项</th><th>结果</th></tr>
-    <tr><td>一个 DiT 块（flow 解码器的基本计算单元），956 帧</td><td>CPU bf16 20 ms → NPU int8 <b>7.4 ms</b></td></tr>
+    <tr><td>一个 DiT 块（flow 解码器的基本计算单元），956 帧</td><td>CPU bf16（8 线程）20 ms → NPU int8（6 个主机线程）<b>7.4 ms</b></td></tr>
     <tr><td>音质：相对 bf16（10 步）的 mel 误差</td><td>NPU int8 跑满 10 步 <b>3.0%</b>；CPU 方案为了跟上只能降到 5 步，误差 7.4%</td></tr>
-    <tr><td>逐句合成部署的实时率（合成耗时 ÷ 音频时长，越低越好）</td><td>CPU flow 1.44 → NPU flow <b>0.64</b>；同一芯片上 27B 大模型同时生成时：2.13 → <b>1.02</b></td></tr>
+    <tr><td>逐句合成部署的实时率（合成耗时 ÷ 音频时长，越低越好）</td><td>相同条件下：CPU flow 1.44 → NPU flow <b>0.84</b>（同一芯片上 27B 大模型同时生成时：2.13 → <b>1.33</b>）；文本模型与 flow 流水线并行后：<b>0.64</b>（<b>1.02</b>）</td></tr>
     <tr><td>合成正在说话时的识别速度</td><td>与单独识别相差 3% 以内</td></tr>
   </table>
   <p class="note en">Measured on a Ryzen 7 8845HS (XDNA1). Details, and how each number was measured, are in the <a href="https://github.com/YuhuaBillChen/npu-cosyvoice#numbers-ryzen-7-8845hs">README</a>.</p>

@@ -49,17 +49,18 @@ to int8.
 
 | | |
 |---|---|
-| one DiT block, 956 frames, CFG batch 2 | CPU bf16 20 ms -> NPU 7.4 ms |
+| one DiT block, 956 frames, CFG batch 2 | CPU bf16 (8 threads) 20 ms -> NPU (6 host threads) 7.4 ms; 4 host threads 8.3 ms |
 | one estimator call (22 blocks), 318 frames | 163 ms; output within 3.3% of the fp32 torch estimator |
 | mel error vs bf16 at 10 steps (lower is better) | NPU int8, 10 steps: 3.0% (int8 rounding only); bf16 cut to 5 steps to save CPU time: 7.4% (error from the steps, not bf16) |
 
 Real-time factor (synthesis time / audio length, lower is better), 10 flow steps:
 
-| | torch LM | llama.cpp Q4_0 LM |
+| | torch LM | llama.cpp LM |
 |---|---|---|
 | `examples/synthesize.py`: one sentence, warm, upstream fp32 loading, idle machine | 2.7 | **0.83** |
-| a deployment (bf16 weights, LM of sentence N+1 overlapping the flow of N): CPU flow -> NPU flow | | 1.44 -> **0.64** |
-| same deployment while a 27B LLM generates on the iGPU | | 2.13 -> **1.02** |
+| a deployment (bf16 weights, 3 sentences, serial, 4 threads, Q8_0 LM): CPU flow -> NPU flow | | 1.44 -> **0.84** |
+| same, while a 27B LLM generates on the iGPU | | 2.13 -> **1.33** |
+| NPU flow with the LM of sentence N+1 overlapping the flow of N (4 sentences, Q4_0 LM, 2+4 threads): idle / 27B generating | | **0.64** / **1.02** |
 
 ## Pieces
 

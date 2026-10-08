@@ -4,7 +4,7 @@
         --weights weights --aot aot --prompt-wav asset/zero_shot_prompt.wav
 
 Prints the relative error of the NPU output against the fp32 torch estimator (int8 W8A8 with
-SmoothQuant q/k/v is ~3% on the mel), the median forward time, and the time a forward waited while
+SmoothQuant q/k/v is ~3.3% on the estimator output), the median forward time, and the time a forward waited while
 another thread held the gate for 0.5 s (output must be unchanged).
 """
 import argparse
