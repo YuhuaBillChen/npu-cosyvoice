@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>npu-cosyvoice — speech on the AMD Ryzen AI NPU</title>
+<meta name="description" content="CosyVoice3 text-to-speech with its flow DiT on the AMD XDNA1 NPU, plus whisper-xdna speech-to-text, behind the OpenAI audio API. Voice for any chat model on a Ryzen AI laptop.">
+<style>
+:root{--blue:#2a78d6;--orange:#eb6834;--ink:#1c1b19;--ink2:#56544f;--mute:#8a8780;--bg:#fbfaf7;--card:#fff;--rule:#e3e1db}
+@media (prefers-color-scheme:dark){:root{--blue:#3987e5;--orange:#d95926;--ink:#f3f1ec;--ink2:#c4c1b9;--mute:#8e8b84;--bg:#161513;--card:#1f1e1b;--rule:#3a3a37}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--blue)}
+main{max-width:960px;margin:0 auto;padding:48px 24px 80px}
+.kicker{font:600 13px/1 ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+h1{font-size:48px;line-height:1.1;margin:12px 0 10px}
+.lead{font-size:22px;color:var(--ink2);margin:0 0 24px;max-width:720px}
+h2{font-size:26px;margin:56px 0 14px}
+.btns a{display:inline-block;margin:0 10px 10px 0;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600}
+.btns .p{background:var(--blue);color:#fff}.btns .s{border:1px solid var(--rule);color:var(--ink)}
+video{width:100%;border-radius:12px;border:1px solid var(--rule);background:#000;display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:18px 20px}
+.card h3{margin:0 0 6px;font-size:18px}.card p{margin:0;color:var(--ink2)}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:600;color:#fff;margin-bottom:8px}
+.b{background:var(--blue)}.o{background:var(--orange)}
+table{border-collapse:collapse;width:100%;font-size:16px}
+td,th{text-align:left;padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{color:var(--mute);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+td b{font-size:18px}
+pre{background:#1c1b19;color:#f3f1ec;padding:18px 20px;border-radius:10px;overflow:auto;font:15px/1.6 ui-monospace,Menlo,monospace}
+pre b{color:#8fc1ff;font-weight:600}
+code{font-family:ui-monospace,Menlo,monospace;font-size:.92em;background:var(--card);border:1px solid var(--rule);padding:1px 6px;border-radius:5px}
+.note{color:var(--ink2);font-size:15px}
+footer{margin-top:64px;color:var(--mute);font-size:14px;border-top:1px solid var(--rule);padding-top:18px}
+.lang{position:absolute;top:20px;right:24px;display:flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;font-size:14px}
+.lang button{background:none;border:0;padding:6px 12px;color:var(--ink2);cursor:pointer;font:inherit}
+.lang button.on{background:var(--blue);color:#fff}
+html[data-lang=en] .zh,html[data-lang=zh] .en{display:none!important}
+html[data-lang=zh] body{font-family:system-ui,-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+main{position:relative}
+@media (max-width:640px){main{padding-top:68px}h1{font-size:36px}.lead{font-size:19px}h2{margin-top:44px}}
+.samples{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:14px}
+.samples .card audio{width:100%;margin-top:8px}
+.samples .card .t{font-size:14px;color:var(--ink2);margin-top:4px;line-height:1.45}
+</style>
+<script>
+(function(){var q=new URLSearchParams(location.search).get('lang'),s=null;try{s=localStorage.getItem('lang')}catch(e){}
+var l=q||s||((navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en');if(l!=='zh')l='en';
+document.documentElement.dataset.lang=l;document.documentElement.lang=l==='zh'?'zh-CN':'en';})();
+function setLang(l){document.documentElement.dataset.lang=l;document.documentElement.lang=l==='zh'?'zh-CN':'en';
+try{localStorage.setItem('lang',l)}catch(e){}document.querySelectorAll('.lang button').forEach(function(b){b.classList.toggle('on',b.dataset.l===l)});
+document.querySelectorAll('video').forEach(function(v){v.pause()});}
+document.addEventListener('DOMContentLoaded',function(){setLang(document.documentElement.dataset.lang)});
+</script>
+</head>
+<body>
+<main>
+  <div class="lang"><button data-l="en" onclick="setLang('en')">EN</button><button data-l="zh" onclick="setLang('zh')">中文</button></div>
+  <div class="kicker">open source · Apache-2.0 · AMD Ryzen AI 7040 / 8040</div>
+  <h1>npu-cosyvoice</h1>
+  <p class="lead en">Speech-to-text and text-to-speech on the NPU most Ryzen AI laptops never use. Point any chat client that speaks the OpenAI audio API at it, and the LLM gets a voice (any voice, from a few seconds of recording), while the CPU cores stay free for the LLM itself.</p>
+  <p class="lead zh">让锐龙 AI 笔记本里那块平时闲着的 NPU 负责"听"和"说"。任何支持 OpenAI 语音接口的聊天软件接上它，大模型就能语音对话，音色还能换成任何人（几秒录音即可），CPU 核心则留给大模型本身。</p>
+  <div class="btns">
+    <a class="p" href="https://github.com/YuhuaBillChen/npu-cosyvoice">GitHub</a>
+    <a class="s" href="https://github.com/YuhuaBillChen/npu-cosyvoice/blob/main/voice/README.md"><span class="en">Voice bundle guide</span><span class="zh">语音套件说明</span></a>
+    <a class="s" href="https://github.com/YuhuaBillChen/npu-cosyvoice#readme"><span class="en">How it works</span><span class="zh">技术细节</span></a>
+  </div>
+
+  <h2><span class="en">Demo</span><span class="zh">演示</span></h2>
+  <video class="en" controls preload="metadata" poster="demo_en_poster.jpg">
+    <source src="demo_en.mp4" type="video/mp4">
+    Your browser cannot play this video. <a href="demo_en.mp4">Download it</a>.
+  </video>
+  <video class="zh" controls preload="metadata" poster="demo_poster.jpg">
+    <source src="demo.mp4" type="video/mp4">
+    浏览器无法播放，<a href="demo.mp4">点此下载</a>。
+  </video>
+  <p class="note en">100 seconds. Everything you hear was synthesized by this project, and everything recognized was recognized by it, on a Ryzen 7 8845HS laptop chip. The narration voice is cloned from a public-domain <a href="https://keithito.com/LJ-Speech-Dataset/">LJ Speech</a> recording, added the way the <a href="https://github.com/YuhuaBillChen/npu-cosyvoice/blob/main/voice/README.md#voices">Voices</a> section describes; the narration track is played back 1.2× faster, the demo clips are as produced.</p>
+  <p class="note zh">97 秒。视频里所有声音都由本项目合成，所有识别结果都由本项目识别，运行在一颗锐龙 7 8845HS 笔记本芯片上。旁白使用 CosyVoice 自带的普通话参考音色。</p>
+
+  <h2><span class="en">What it does</span><span class="zh">做什么</span></h2>
+  <div class="grid">
+    <div class="card"><span class="pill b">STT</span>
+      <div class="en"><h3>Listening</h3><p>Your speech → text. <a href="https://github.com/drakosha/whisper-xdna">whisper-xdna</a> runs the Whisper large-v3-turbo encoder on the NPU. A 5 s sentence comes back as text in about 3 s.</p></div>
+      <div class="zh"><h3>听</h3><p>你说的话 → 文字。<a href="https://github.com/drakosha/whisper-xdna">whisper-xdna</a> 在 NPU 上运行 Whisper large-v3-turbo 编码器，一句 5 秒的话约 3 秒出文字。</p></div></div>
+    <div class="card"><span class="pill o">TTS</span>
+      <div class="en"><h3>Speaking</h3><p>The reply → speech. CosyVoice3's flow decoder, the part that takes most of the time, runs int8 on the NPU; 6 s of speech is synthesized in about 4 s.</p></div>
+      <div class="zh"><h3>说</h3><p>AI 的回复 → 语音。CosyVoice3 最耗时的部分（flow 解码器）以 int8 跑在 NPU 上，6 秒语音约 4 秒合成完。</p></div></div>
+    <div class="card"><span class="pill b">NPU</span>
+      <div class="en"><h3>Sharing one chip</h3><p>STT gets 5 of the NPU's 6 hardware contexts, TTS gets one. When someone speaks, recognition has priority and synthesis pauses between layers, so STT is not slowed by a talking TTS.</p></div>
+      <div class="zh"><h3>共用一块芯片</h3><p>NPU 共 6 个硬件上下文，识别用 5 个，合成用 1 个。有人说话时识别优先，合成在层与层之间暂停让路，所以识别不会被正在说话的合成拖慢。</p></div></div>
+  </div>
+
+  <h2><span class="en">Your own voice</span><span class="zh">用你自己的声音</span></h2>
+  <p class="en">Any voice works: give it a few seconds of clean recording and its transcript, and it speaks in that voice, in English, Chinese and several more languages. Below, a 7.5 s public-domain <a href="https://keithito.com/LJ-Speech-Dataset/">LJ Speech</a> clip became a new voice.</p>
+  <p class="zh">音色可以换成任何人：给它几秒钟干净的录音和对应的文字稿，它就用这个声音说话，中文、英文等多种语言都行。下面是用一段 7.5 秒的公有领域 <a href="https://keithito.com/LJ-Speech-Dataset/">LJ Speech</a> 录音做出的新音色。</p>
+  <div class="samples">
+    <div class="card"><span class="pill b"><span class="en">1 · reference</span><span class="zh">1 · 参考录音</span></span>
+      <div class="t"><span class="en">The 7.5 s recording you provide</span><span class="zh">你提供的 7.5 秒录音</span></div><audio controls preload="none" src="ref_lj.mp3"></audio></div>
+    <div class="card"><span class="pill o"><span class="en">2 · default voice</span><span class="zh">2 · 默认音色</span></span>
+      <div class="t"><span class="en">Before: the voice that ships with CosyVoice</span><span class="zh">换之前：CosyVoice 自带的音色</span></div><audio controls preload="none" src="clone_en_default.mp3"></audio></div>
+    <div class="card"><span class="pill o"><span class="en">3 · cloned, English</span><span class="zh">3 · 克隆音色 · 英文</span></span>
+      <div class="t"><span class="en">After: new text in the cloned voice</span><span class="zh">换之后：新句子用克隆的声音说</span></div><audio controls preload="none" src="clone_en_lj.mp3"></audio></div>
+    <div class="card"><span class="pill o"><span class="en">4 · cloned, Chinese</span><span class="zh">4 · 克隆音色 · 中文</span></span>
+      <div class="t"><span class="en">The same voice speaking Chinese</span><span class="zh">同一个声音说中文</span></div><audio controls preload="none" src="clone_zh_lj.mp3"></audio></div>
+  </div>
+  <p class="en">To add one: put <code>&lt;name&gt;.wav</code> (5–15 s) and <code>&lt;name&gt;.txt</code> (exactly what is said) into the <code>voices</code> folder, restart, and ask for <code>"voice": "&lt;name&gt;"</code>. See <a href="https://github.com/YuhuaBillChen/npu-cosyvoice/blob/main/voice/README.md#voices">Voices</a>. Only clone voices you have the right to use.</p>
+  <p class="zh">添加方法：把 <code>&lt;名字&gt;.wav</code>（5–15 秒）和 <code>&lt;名字&gt;.txt</code>（录音里说的原文）放进 <code>voices</code> 目录，重启服务，请求时指定 <code>"voice": "&lt;名字&gt;"</code>。详见 <a href="https://github.com/YuhuaBillChen/npu-cosyvoice/blob/main/voice/README.md#voices">Voices</a>。请只克隆你有权使用的声音。</p>
+
+  <h2><span class="en">Numbers</span><span class="zh">数据</span></h2>
+  <table class="en">
+    <tr><th>measurement</th><th>result</th></tr>
+    <tr><td>one DiT block (the unit of work in the flow decoder), 956 frames</td><td>CPU bf16 20 ms → NPU int8 <b>7.4 ms</b></td></tr>
+    <tr><td>quality: mel error vs bf16 at 10 flow steps</td><td>NPU int8 at 10 steps <b>3.0%</b>; a CPU setup has to drop to 5 steps to keep up, which costs 7.4%</td></tr>
+    <tr><td>real-time factor of a sentence-by-sentence deployment (synthesis time ÷ audio length)</td><td>CPU flow 1.44 → NPU flow <b>0.64</b>; next to a 27B LLM generating on the same chip: 2.13 → <b>1.02</b></td></tr>
+    <tr><td>STT next to a speaking TTS</td><td>within 3% of STT alone</td></tr>
+  </table>
+  <table class="zh">
+    <tr><th>测量项</th><th>结果</th></tr>
+    <tr><td>一个 DiT 块（flow 解码器的基本计算单元），956 帧</td><td>CPU bf16 20 ms → NPU int8 <b>7.4 ms</b></td></tr>
+    <tr><td>音质：相对 bf16（10 步）的 mel 误差</td><td>NPU int8 跑满 10 步 <b>3.0%</b>；CPU 方案为了跟上只能降到 5 步，误差 7.4%</td></tr>
+    <tr><td>逐句合成部署的实时率（合成耗时 ÷ 音频时长，越低越好）</td><td>CPU flow 1.44 → NPU flow <b>0.64</b>；同一芯片上 27B 大模型同时生成时：2.13 → <b>1.02</b></td></tr>
+    <tr><td>合成正在说话时的识别速度</td><td>与单独识别相差 3% 以内</td></tr>
+  </table>
+  <p class="note en">Measured on a Ryzen 7 8845HS (XDNA1). Details, and how each number was measured, are in the <a href="https://github.com/YuhuaBillChen/npu-cosyvoice#numbers-ryzen-7-8845hs">README</a>.</p>
+  <p class="note zh">测量平台：锐龙 7 8845HS（XDNA1）。每个数字的测量方法见 <a href="https://github.com/YuhuaBillChen/npu-cosyvoice#numbers-ryzen-7-8845hs">README</a>。</p>
+
+  <h2><span class="en">Install</span><span class="zh">安装</span></h2>
+  <p class="en">A Ryzen AI 7040/8040 machine with Linux 6.14+ (for the <code>amdxdna</code> driver) and Docker:</p>
+  <p class="zh">需要锐龙 AI 7040/8040 机器、Linux 6.14 以上（自带 <code>amdxdna</code> 驱动）和 Docker：</p>
+<pre><b>$</b> git clone https://github.com/YuhuaBillChen/npu-cosyvoice.git && cd npu-cosyvoice
+<b>$</b> export RENDER_GID=$(getent group render | cut -d: -f3)
+<b>$</b> docker compose -f voice/compose.yml run --rm setup        <span style="color:#8e8b84"># once, ~15 min</span>
+<b>$</b> docker compose -f voice/compose.yml --profile stt up -d
+<b>$</b> curl localhost:8000/v1/audio/speech -H 'Content-Type: application/json' \
+      -d '{"input": "Hello from the NPU.", "response_format": "mp3"}' -o hello.mp3</pre>
+  <p class="en">Then in Open WebUI: <em>Admin Settings → Audio</em>, both engines "OpenAI", URL <code>http://&lt;host&gt;:8000/v1</code>, TTS model <code>cosyvoice3</code>, STT model <code>whisper</code>. Any other client that supports the OpenAI audio API works the same way.</p>
+  <p class="zh">然后在 Open WebUI：<em>管理员设置 → 音频</em>，语音识别和语音合成引擎都选 "OpenAI"，地址填 <code>http://&lt;主机&gt;:8000/v1</code>，TTS 模型 <code>cosyvoice3</code>，STT 模型 <code>whisper</code>。其他支持 OpenAI 语音接口的客户端同理。</p>
+
+  <h2><span class="en">How it works, in one paragraph</span><span class="zh">原理一段话</span></h2>
+  <p class="en">CosyVoice3 spends most of its time in a 22-block transformer (the flow DiT) that it runs 10 times per sentence. npu-cosyvoice moves every matrix multiply of that transformer to the NPU as int8 (W8A8 with <a href="https://arxiv.org/abs/2211.10438">SmoothQuant</a> on the sensitive layer) through one compiled MLIR-AIE kernel, keeps the small operations in AVX-512 C++ on a few host threads, and runs the text model through llama.cpp. The number of flow steps adapts per sentence to the playback deadline. A tiny shared file lets the STT service pause the TTS between layers.</p>
+  <p class="zh">CosyVoice3 大部分时间花在一个 22 层的 transformer（flow DiT）上，每句话要跑 10 遍。npu-cosyvoice 把这个 transformer 的所有矩阵乘法以 int8 放到 NPU 上（W8A8，对敏感层使用 <a href="https://arxiv.org/abs/2211.10438">SmoothQuant</a>），只用一个编译好的 MLIR-AIE 内核；其余小运算用 AVX-512 C++ 在少数几个 CPU 线程上完成；文本模型走 llama.cpp。flow 的步数按播放截止时间逐句自适应。一个很小的共享文件让识别服务能让合成在层间暂停。</p>
+
+  <h2><span class="en">Hardware</span><span class="zh">硬件</span></h2>
+  <p class="en">Tested on XDNA1 (Ryzen AI 7040 "Phoenix" and 8040 "Hawk Point"). XDNA2 (Ryzen AI 300, Strix Halo, Krackan) builds with one flag but is untested; if you own one, running <code>tests/check_gemm.py</code> and reporting the result in an issue would make it a supported platform.</p>
+  <p class="zh">已在 XDNA1（锐龙 AI 7040 "Phoenix"、8040 "Hawk Point"）上测试。XDNA2（锐龙 AI 300、Strix Halo、Krackan）加一个参数即可编译，但未经测试；如果你有这类机器，运行 <code>tests/check_gemm.py</code> 并在 issue 里报告结果，就能让它成为正式支持的平台。</p>
+
+  <footer><span class="en">Built on</span><span class="zh">基于</span> <a href="https://github.com/FunAudioLLM/CosyVoice">CosyVoice</a>, <a href="https://github.com/drakosha/whisper-xdna">whisper-xdna</a>, <a href="https://github.com/Xilinx/mlir-aie">MLIR-AIE</a>, <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>. Apache-2.0.</footer>
+</main>
+</body>
+</html>
