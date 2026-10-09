@@ -11,6 +11,9 @@ few host threads.
 It also runs CosyVoice's LM backbone (Qwen2 0.5B) through llama.cpp on the CPU, which is the other
 half of the time once the flow is off the CPU.
 
+Technical report: [Let the Idle NPU Speak: Local Voice Chat on a Ryzen AI Laptop](docs/npu-cosyvoice-report.pdf).
+Demo videos and audio samples: <https://yuhuabillchen.github.io/npu-cosyvoice/>.
+
 Status: runs in production on one machine (voice chat next to a 27B LLM on the same SoC, sharing
 the NPU with a Whisper STT service).
 

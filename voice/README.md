@@ -20,7 +20,7 @@ the compose plugin, ~18 GB of disk and ~8 GB of free RAM.
 
 ```sh
 export RENDER_GID=$(getent group render | cut -d: -f3)
-docker compose -f voice/compose.yml run --rm setup        # once: download, export, compile (~15 min)
+docker compose -f voice/compose.yml run --rm setup        # once: downloads ~4 GB
 docker compose -f voice/compose.yml --profile stt up -d   # or without --profile stt for TTS only
 ```
 
@@ -59,5 +59,10 @@ reference, so an English reference reads English best.
 | `NPU_DEVICE` | npu1 | `npu2` builds the overlay for XDNA2 (Ryzen AI 300); untested, see the main README |
 
 `STT_URL` points the transcription endpoint at another whisper-compatible server instead.
+
+`setup` downloads the CosyVoice3 checkpoint from ModelScope and the prebuilt int8 weights, LM GGUF and
+NPU kernel from [Hugging Face](https://huggingface.co/billchen42/npu-cosyvoice) (checksummed). With
+`PREBUILT_REPO=` (empty), or if the checkpoint differs from the tested one, it builds those three locally
+instead (~15 min of CPU); they are deterministic either way.
 
 If the NPU fails to resume from runtime suspend under memory pressure, see Notes in the main README.

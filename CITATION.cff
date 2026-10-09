@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use npu-cosyvoice, please cite the report below."
+title: npu-cosyvoice
+authors:
+  - family-names: Chen
+    given-names: Yuhua
+    website: https://www.yuhuachen.com
+license: Apache-2.0
+repository-code: https://github.com/YuhuaBillChen/npu-cosyvoice
+url: https://yuhuabillchen.github.io/npu-cosyvoice/
+preferred-citation:
+  type: report
+  title: "Let the Idle NPU Speak: Local Voice Chat on a Ryzen AI Laptop"
+  authors:
+    - family-names: Chen
+      given-names: Yuhua
+  year: 2026
+  url: https://yuhuabillchen.github.io/npu-cosyvoice/npu-cosyvoice-report.pdf
