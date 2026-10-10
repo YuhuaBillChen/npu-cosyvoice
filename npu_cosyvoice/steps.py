@@ -47,7 +47,7 @@ class AdaptiveSteps:
             with self.lock:
                 ntok = k["token"].shape[-1]
                 frames = k["prompt_feat"].shape[1] + MEL_PER_TOKEN * ntok
-                audio_s = ntok / TOKENS_PER_S
+                audio_s = ntok / TOKENS_PER_S / k.get("speed", 1.0)  # speed shortens the mel after the flow
                 t0 = time.perf_counter()
                 self.steps, budget, first = self.choose(frames, audio_s, t0)
                 out = token2wav(*a, **k)
