@@ -34,5 +34,13 @@ RUN make all
 ENV PYTHONPATH=/opt/CosyVoice:/opt/CosyVoice/third_party/Matcha-TTS:/opt/npu-cosyvoice PATH=/opt/venv/bin:$PATH
 CMD ["/opt/venv/bin/python", "voice/server.py"]
 
+# whisper-xdna's STT server (published image, unmodified) with voice/whisper_entry.py, which caps its
+# NPU contexts at 5 and adds language detection and the Chinese prompt
+FROM ghcr.io/drakosha/npu-whisper@sha256:04291377e5266717ecb9e5c889378e93d798d5b9a7b8ce2a41ba7116eba052a4 AS whisper
+COPY voice/whisper_entry.py /voice/whisper_entry.py
+ENV PYTHONPATH=/usr/lib/python3/dist-packages \
+    PEANO_INSTALL_DIR=/opt/mlir-aie/ironenv/lib/python3.13/site-packages/llvm-aie
+CMD ["/opt/npu-whisper/refenv/bin/python", "-u", "/voice/whisper_entry.py"]
+
 # the library's own image (the default target): toolchain only, the checkout is mounted
 FROM base

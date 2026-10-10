@@ -15,6 +15,8 @@ Voices: "default" is CosyVoice's own reference recording. For another one, put <
 seconds of clean speech) and <name>.txt (its transcript) in $VOICES_DIR. Unknown voice names,
 such as OpenAI's "alloy", get the default voice.
 """
+import ctypes
+import gc
 import glob
 import io
 import json
@@ -44,6 +46,8 @@ STT_URL = os.environ.get("STT_URL", "").rstrip("/")
 GATE = os.environ.get("NPU_GATE", "/dev/shm/npu-cosyvoice.gate")
 FLOW_THREADS = int(os.environ.get("FLOW_THREADS", "4"))
 PORT = int(os.environ.get("PORT", "8000"))
+# clients such as Open WebUI send no speed; this is used when a request has none
+DEFAULT_SPEED = float(os.environ.get("DEFAULT_SPEED", "1.0"))
 INSTRUCT = "You are a helpful assistant.<|endofprompt|>"
 FORMATS = {"mp3": ("audio/mpeg", ["-f", "mp3", "-b:a", "128k"]),
            "opus": ("audio/ogg", ["-f", "ogg", "-c:a", "libopus", "-b:a", "48k"]),
@@ -112,6 +116,9 @@ def load():
 
 
 MODEL = load()
+# loading leaves gigabytes of freed checkpoint copies in glibc's heap; hand them back to the system
+gc.collect()
+ctypes.CDLL("libc.so.6").malloc_trim(0)
 GATE_HOLD = npu_cosyvoice.NpuGate(GATE)
 app = FastAPI()
 
@@ -121,7 +128,7 @@ class Speech(BaseModel):
     model: str = "cosyvoice3"
     voice: str = "default"
     response_format: str = "mp3"
-    speed: float = 1.0
+    speed: float = DEFAULT_SPEED
 
 
 def encode(audio, fmt):

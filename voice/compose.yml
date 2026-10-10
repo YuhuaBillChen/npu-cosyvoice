@@ -38,6 +38,7 @@ services:
       # without the stt profile, /v1/audio/transcriptions answers 502; set STT_URL= to make it 503
       STT_URL: "${STT_URL-http://whisper:8090}"
       MALLOC_ARENA_MAX: "2"
+      DEFAULT_SPEED: "${DEFAULT_SPEED:-1.0}"
     volumes:
       - data:/data
     restart: unless-stopped
@@ -45,12 +46,10 @@ services:
   whisper:
     <<: *npu
     profiles: [stt]
-    # whisper-xdna (https://github.com/drakosha/whisper-xdna), the build this was tested with
-    image: ghcr.io/drakosha/npu-whisper@sha256:04291377e5266717ecb9e5c889378e93d798d5b9a7b8ce2a41ba7116eba052a4
-    command: /opt/npu-whisper/refenv/bin/python -u /voice/whisper_entry.py
+    # whisper-xdna (https://github.com/drakosha/whisper-xdna) plus voice/whisper_entry.py
+    build: {context: .., dockerfile: docker/Dockerfile, target: whisper}
+    image: npu-cosyvoice-whisper
     environment:
-      PYTHONPATH: /usr/lib/python3/dist-packages
-      PEANO_INSTALL_DIR: /opt/mlir-aie/ironenv/lib/python3.13/site-packages/llvm-aie
       NPU_STT_MAX_CTX: "5"          # XDNA1 has 6 contexts; the TTS keeps one
       NPU_STT_MODEL: large-v3-turbo
       NPU_STT_LANG: "${STT_LANGUAGE:-auto}"  # auto: detected per request (see whisper_entry.py)
@@ -58,7 +57,6 @@ services:
       NPU_STT_DEFAULT_CTX: "768"
       NPU_STT_TORCH_THREADS: "4"    # the decoder runs on the CPU; leave cores for the LM and the chat model
     volumes:
-      - ./whisper_entry.py:/voice/whisper_entry.py:ro
       - whisper-models:/root/.cache/whisper
       - whisper-aot:/opt/npu-whisper/aot
     restart: unless-stopped
