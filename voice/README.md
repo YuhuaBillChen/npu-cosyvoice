@@ -55,7 +55,7 @@ reference, so an English reference reads English best.
 |---|---|---|
 | `VOICE_PORT` | 8000 | host port |
 | `VOICE_BIND` | 0.0.0.0 | host interface |
-| `STT_LANGUAGE` | en | whisper's language when the request does not name one |
+| `STT_LANGUAGE` | auto | whisper's language when the request does not name one; `auto` detects it, and Chinese gets punctuation and simplified characters |
 | `NPU_DEVICE` | npu1 | `npu2` builds the overlay for XDNA2 (Ryzen AI 300); untested, see the main README |
 
 `STT_URL` points the transcription endpoint at another whisper-compatible server instead.

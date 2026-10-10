@@ -70,8 +70,9 @@ Real-time factor (synthesis time / audio length, lower is better), 10 flow steps
 - `csrc/dit_npu.cpp` -> `npu_cosyvoice/libdit_npu.so`: the DiT. Errors are returned, never abort.
 - `npu_cosyvoice.install(model, weights_dir, aot_dir)`: swaps the estimator of a loaded CosyVoice3.
 - `npu_cosyvoice.AdaptiveSteps`: for sentence-by-sentence playback, picks per sentence the most
-  flow steps (4..10) that still finish before the previous sentence stops playing, and the fewest
-  for the first sentence of a reply.
+  flow steps (4..10) that still finish before the previous sentence stops playing while leaving 2 s
+  of audio queued, and the fewest for the first sentence of a reply; so a reply starts cheap and
+  ramps up as the buffer grows. It accounts for the `speed` setting.
 - `npu_cosyvoice.NpuGate`: the NPU has a 6-context ceiling and no preemption. Another NPU user
   (e.g. whisper-xdna STT) holds the gate while it runs; the DiT pauses at the next layer
   boundary. Measured: STT next to a speaking TTS is within 3% of STT alone.

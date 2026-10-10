@@ -53,7 +53,7 @@ services:
       PEANO_INSTALL_DIR: /opt/mlir-aie/ironenv/lib/python3.13/site-packages/llvm-aie
       NPU_STT_MAX_CTX: "5"          # XDNA1 has 6 contexts; the TTS keeps one
       NPU_STT_MODEL: large-v3-turbo
-      NPU_STT_LANG: "${STT_LANGUAGE:-en}"
+      NPU_STT_LANG: "${STT_LANGUAGE:-auto}"  # auto: detected per request (see whisper_entry.py)
       NPU_STT_LADDER: "768,1500"    # each extra audio length is a compiled overlay; switching costs seconds
       NPU_STT_DEFAULT_CTX: "768"
       NPU_STT_TORCH_THREADS: "4"    # the decoder runs on the CPU; leave cores for the LM and the chat model
