@@ -6,6 +6,11 @@ that deadline, and the cheapest setting for the first sentence of a reply (nothi
 so every second is user-visible latency). The cost model is fixed + per (step x frame), calibrated
 online from the calls it observes, so it follows whatever else is loading the machine.
 
+Steps above the minimum are only bought with time beyond a reserve (reserve_s of audio still queued
+for playback once this sentence is done), so a reply starts cheap, builds up that buffer, and ramps
+to max_steps as the buffer allows; a long sentence later in the reply then finds the buffer there
+instead of a deadline the previous sentence just barely met.
+
 Assumes one listener consuming the audio in call order, at real time.
 """
 import threading
@@ -17,9 +22,10 @@ MEL_PER_TOKEN = 2
 
 class AdaptiveSteps:
     def __init__(self, min_steps=4, max_steps=10, first_budget_s=0.8, margin_s=0.3,
-                 per_step_frame_s=0.0004, fixed_per_audio_s=0.25):
+                 per_step_frame_s=0.0004, fixed_per_audio_s=0.25, reserve_s=2.0):
         self.min_steps, self.max_steps = min_steps, max_steps
         self.first_budget_s, self.margin_s = first_budget_s, margin_s
+        self.reserve_s = reserve_s
         self.per_step_frame_s = per_step_frame_s    # online estimate (EMA)
         self.fixed_per_audio_s = fixed_per_audio_s  # encoder + vocoder, per second of audio
         self.steps = max_steps
@@ -31,8 +37,9 @@ class AdaptiveSteps:
         first = self.play_end <= now
         budget = self.first_budget_s if first else self.play_end - now - self.margin_s
         fixed = self.fixed_per_audio_s * audio_s
+        spend = budget if first else budget - self.reserve_s
         for st in range(self.max_steps, self.min_steps - 1, -1):
-            if fixed + st * frames * self.per_step_frame_s <= budget:
+            if fixed + st * frames * self.per_step_frame_s <= spend:
                 return st, budget, first
         return self.min_steps, budget, first
 
