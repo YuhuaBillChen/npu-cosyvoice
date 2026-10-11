@@ -31,12 +31,14 @@ PREBUILT_REPO="${PREBUILT_REPO-billchen42/npu-cosyvoice}"
 if [ -n "$PREBUILT_REPO" ] && [ "$TESTED" = 1 ] && [ ! -f "$DATA/weights/meta.json" ]; then
   echo "== downloading prebuilt int8 weights, LM and NPU overlay from $PREBUILT_REPO"
   PRE="$DATA/prebuilt"
+  # a failed download (offline, repository missing) is not an error: the files are built below
   $PY -c "from huggingface_hub import snapshot_download; snapshot_download('$PREBUILT_REPO', local_dir='$PRE',
-      allow_patterns=['weights/*', 'cv_llm_q4_0.gguf', 'aot/${NPU_DEVICE:-npu1}/*', 'SHA256SUMS'])" \
+      allow_patterns=['weights/*', 'cv_llm_q4_0.gguf', 'aot/${NPU_DEVICE:-npu1}/*', 'SHA256SUMS'])" 2>"$PRE.err" \
     && (cd "$PRE" && grep -E " \./(weights/|cv_llm_q4_0\.gguf|aot/${NPU_DEVICE:-npu1}/)" SHA256SUMS | sha256sum --quiet -c -) \
     && mv "$PRE/weights" "$PRE/cv_llm_q4_0.gguf" "$DATA/" \
     && { [ ! -d "$PRE/aot/${NPU_DEVICE:-npu1}" ] || { mkdir -p "$DATA/aot" && mv "$PRE/aot/${NPU_DEVICE:-npu1}"/* "$DATA/aot/"; }; } \
-    || echo "note: prebuilt download failed; building the int8 files here"
+    || echo "note: prebuilt download failed ($(tail -n 1 "$PRE.err" 2>/dev/null | cut -c1-120)); building the int8 files here"
+  rm -f "$PRE.err"
   rm -rf "$PRE"
 fi
 if [ ! -f "$DATA/weights/meta.json" ]; then
