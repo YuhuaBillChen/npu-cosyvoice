@@ -179,9 +179,16 @@ async def transcriptions(request: Request):
                 with urllib.request.urlopen(fwd, timeout=120) as r:
                     return r.status, r.read(), r.headers.get("Content-Type", "application/json")
             except urllib.error.HTTPError as e:
-                return e.code, e.read(), e.headers.get("Content-Type", "application/json")
-            except OSError as e:
-                return 502, json.dumps({"error": f"speech-to-text unreachable: {e}"}).encode(), "application/json"
+                # Upstream exception bodies can contain deployment paths, URLs or secrets.
+                # Preserve the HTTP status, but keep diagnostics on the upstream server.
+                status = e.code
+                e.close()
+                message = {400: "invalid audio request", 413: "audio request too large",
+                           422: "invalid audio request", 429: "speech-to-text service busy",
+                           503: "speech-to-text service unavailable"}.get(status, "speech-to-text request failed")
+                return status, json.dumps({"error": message}).encode(), "application/json"
+            except OSError:
+                return 502, json.dumps({"error": "speech-to-text service unavailable"}).encode(), "application/json"
 
     status, data, media = await run_in_threadpool(call)
     return Response(data, status_code=status, media_type=media)

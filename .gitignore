@@ -6,3 +6,15 @@ pretrained_models/
 *.wav
 third_party/
 *.gguf
+
+# Local state must not enter a release.
+.env.*
+!.env.example
+voices/
+*.log
+*.pem
+*.key
+.env
+
+# Public synthetic regression fixture (not a user recording).
+!docs/short-mandarin-regression.wav

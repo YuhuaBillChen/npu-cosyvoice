@@ -37,9 +37,9 @@ In Open WebUI: Admin Settings > Audio, both engines "OpenAI", URL `http://<host>
 API key, TTS model `cosyvoice3`, STT model `whisper`. (If Open WebUI runs in a container, `<host>`
 is this machine's LAN address or `host.docker.internal`, not `localhost`.)
 
-There is no authentication. By default the port is open on every interface of the host; set
-`VOICE_BIND=127.0.0.1` to keep it local, or put a reverse proxy with authentication in front
-before exposing it beyond a trusted network.
+There is no authentication, so by default the port only listens on this machine. Set
+`VOICE_BIND=0.0.0.0` to open it to your network, and put a reverse proxy with authentication in
+front before exposing it beyond a trusted one.
 
 ## Voices
 
@@ -54,8 +54,9 @@ reference, so an English reference reads English best.
 | variable | default | |
 |---|---|---|
 | `VOICE_PORT` | 8000 | host port |
-| `VOICE_BIND` | 0.0.0.0 | host interface |
+| `VOICE_BIND` | 127.0.0.1 | host interface |
 | `DEFAULT_SPEED` | 1.0 | speech speed when a request has none (Open WebUI sends none) |
+| `STT_BEAM_SIZE` | 1 | whisper's beam width, 1-8. 1 (greedy) is fastest; 5 fixed one Mandarin clip but broke an English one and adds 0.2-0.8 s |
 | `STT_LANGUAGE` | auto | whisper's language when the request does not name one; `auto` detects it, and Chinese gets punctuation and simplified characters |
 | `NPU_DEVICE` | npu1 | `npu2` builds the overlay for XDNA2 (Ryzen AI 300); untested, see the main README |
 

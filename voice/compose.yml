@@ -24,6 +24,7 @@ services:
     command: bash voice/setup.sh
     environment:
       NPU_DEVICE: "${NPU_DEVICE:-npu1}"
+      PREBUILT_REPO: "${PREBUILT_REPO-billchen42/npu-cosyvoice}"
     volumes:
       - data:/data
 
@@ -32,8 +33,8 @@ services:
     build: {context: .., dockerfile: docker/Dockerfile, target: voice}
     image: npu-cosyvoice-voice
     ports:
-      # no authentication: VOICE_BIND=127.0.0.1 keeps it on this machine
-      - "${VOICE_BIND:-0.0.0.0}:${VOICE_PORT:-8000}:8000"
+      # no authentication: loopback by default; remote access needs an explicit bind
+      - "${VOICE_BIND:-127.0.0.1}:${VOICE_PORT:-8000}:8000"
     environment:
       # without the stt profile, /v1/audio/transcriptions answers 502; set STT_URL= to make it 503
       STT_URL: "${STT_URL-http://whisper:8090}"
@@ -54,6 +55,7 @@ services:
       NPU_STT_MODEL: large-v3-turbo
       NPU_STT_LANG: "${STT_LANGUAGE:-auto}"  # auto: detected per request (see whisper_entry.py)
       NPU_STT_LADDER: "768,1500"    # each extra audio length is a compiled overlay; switching costs seconds
+      NPU_STT_BEAM_SIZE: "${STT_BEAM_SIZE:-1}"  # 1 = greedy; see voice/whisper_entry.py
       NPU_STT_DEFAULT_CTX: "768"
       NPU_STT_TORCH_THREADS: "4"    # the decoder runs on the CPU; leave cores for the LM and the chat model
     volumes:

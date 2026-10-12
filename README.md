@@ -72,7 +72,8 @@ Real-time factor (synthesis time / audio length, lower is better), 10 flow steps
 - `npu_cosyvoice.AdaptiveSteps`: for sentence-by-sentence playback, picks per sentence the most
   flow steps (4..10) that still finish before the previous sentence stops playing while leaving 2 s
   of audio queued, and the fewest for the first sentence of a reply; so a reply starts cheap and
-  ramps up as the buffer grows. It accounts for the `speed` setting.
+  ramps up as the buffer grows. It accounts for the `speed` setting, and a request more than 6 s
+  after the previous one starts a new reply (so an interrupted reply leaves nothing behind).
 - `npu_cosyvoice.NpuGate`: the NPU has a 6-context ceiling and no preemption. Another NPU user
   (e.g. whisper-xdna STT) holds the gate while it runs; the DiT pauses at the next layer
   boundary. Measured: STT next to a speaking TTS is within 3% of STT alone.

@@ -3,7 +3,8 @@ Copyright 2026 the npu-cosyvoice authors
 
 Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-This project builds on, but does not redistribute, the following:
+This project builds on the following. The published container images include them, with their notices;
+model weights are downloaded separately under their own terms.
 
 - CosyVoice (https://github.com/FunAudioLLM/CosyVoice), Apache-2.0. npu_cosyvoice/flow.py
   reimplements the forward pass of CosyVoice3's DiT estimator; the model weights are downloaded

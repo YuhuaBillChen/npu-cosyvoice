@@ -27,6 +27,12 @@ rawxrt.RawRT.__init__.__defaults__ = (int(os.environ.get("NPU_STT_MAX_CTX", "5")
 
 import whisper  # noqa: E402  (the server imports this same module)
 
+# beam search (e.g. 5) fixed one short Mandarin clip that greedy decoding got wrong, but broke an English
+# one ("cloned" -> "clone") and costs 0.2-0.8 s per request, so greedy stays the default
+BEAM_SIZE = int(os.environ.get("NPU_STT_BEAM_SIZE", "1"))
+if not 1 <= BEAM_SIZE <= 8:
+    raise ValueError("NPU_STT_BEAM_SIZE must be between 1 and 8")
+
 PROMPT_ZH = os.environ.get("NPU_STT_PROMPT_ZH", "以下是普通话的句子。")
 # the prompt makes Chinese punctuated, but often with ASCII marks ("你好,今天"); after a Chinese
 # character they become the full-width ones
@@ -42,6 +48,8 @@ def decode(model, mel, options=whisper.DecodingOptions(), **kw):
         options = dataclasses.replace(options, language=max(probs, key=probs.get))
     if options.language == "zh" and PROMPT_ZH and not options.prompt:
         options = dataclasses.replace(options, prompt=PROMPT_ZH)
+    if options.beam_size is None and BEAM_SIZE > 1:
+        options = dataclasses.replace(options, beam_size=BEAM_SIZE)
     result = _decode(model, mel, options, **kw)
     if options.language != "zh":
         return result

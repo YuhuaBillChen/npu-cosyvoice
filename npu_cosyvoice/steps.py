@@ -11,7 +11,11 @@ for playback once this sentence is done), so a reply starts cheap, builds up tha
 to max_steps as the buffer allows; a long sentence later in the reply then finds the buffer there
 instead of a deadline the previous sentence just barely met.
 
-Assumes one listener consuming the audio in call order, at real time.
+Assumes one listener consuming the audio in call order, at real time. A call that arrives more than
+idle_reset_s after the previous one starts a new reply: within a reply a client asks for the next
+sentence within a few seconds, while a new reply waits for the user to speak, recognition and the chat
+model's first sentence. Without this, a reply that was interrupted left its unplayed audio in the
+estimate, and the next reply's first sentence was given 10 steps as if that audio were still playing.
 """
 import threading
 import time
@@ -22,10 +26,12 @@ MEL_PER_TOKEN = 2
 
 class AdaptiveSteps:
     def __init__(self, min_steps=4, max_steps=10, first_budget_s=0.8, margin_s=0.3,
-                 per_step_frame_s=0.0004, fixed_per_audio_s=0.25, reserve_s=2.0):
+                 per_step_frame_s=0.0004, fixed_per_audio_s=0.25, reserve_s=2.0, idle_reset_s=6.0):
         self.min_steps, self.max_steps = min_steps, max_steps
         self.first_budget_s, self.margin_s = first_budget_s, margin_s
         self.reserve_s = reserve_s
+        self.idle_reset_s = idle_reset_s
+        self.last_call = 0.0
         self.per_step_frame_s = per_step_frame_s    # online estimate (EMA)
         self.fixed_per_audio_s = fixed_per_audio_s  # encoder + vocoder, per second of audio
         self.steps = max_steps
@@ -56,6 +62,9 @@ class AdaptiveSteps:
                 frames = k["prompt_feat"].shape[1] + MEL_PER_TOKEN * ntok
                 audio_s = ntok / TOKENS_PER_S / k.get("speed", 1.0)  # speed shortens the mel after the flow
                 t0 = time.perf_counter()
+                if t0 - self.last_call > self.idle_reset_s:
+                    self.play_end = 0.0
+                self.last_call = t0
                 self.steps, budget, first = self.choose(frames, audio_s, t0)
                 out = token2wav(*a, **k)
                 el = time.perf_counter() - t0

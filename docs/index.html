@@ -43,6 +43,7 @@ main{position:relative}
 .samples{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:14px}
 .samples .card audio{width:100%;margin-top:8px}
 .samples .card .t{font-size:14px;color:var(--ink2);margin-top:4px;line-height:1.45}
+.credit{margin-top:8px}
 </style>
 <script>
 (function(){var q=new URLSearchParams(location.search).get('lang'),s=null;try{s=localStorage.getItem('lang')}catch(e){}
@@ -147,7 +148,7 @@ document.addEventListener('DOMContentLoaded',function(){setLang(document.documen
   <p class="en">Tested on XDNA1 (Ryzen AI 7040 "Phoenix" and 8040 "Hawk Point"). XDNA2 (Ryzen AI 300, Strix Halo, Krackan) builds with one flag but is untested; if you own one, running <code>tests/check_gemm.py</code> and reporting the result in an issue would make it a supported platform.</p>
   <p class="zh">已在 XDNA1（锐龙 AI 7040 "Phoenix"、8040 "Hawk Point"）上测试。XDNA2（锐龙 AI 300、Strix Halo、Krackan）加一个参数即可编译，但未经测试；如果你有这类机器，运行 <code>tests/check_gemm.py</code> 并在 issue 里报告结果，就能让它成为正式支持的平台。</p>
 
-  <footer><span class="en">Built on</span><span class="zh">基于</span> <a href="https://github.com/FunAudioLLM/CosyVoice">CosyVoice</a>, <a href="https://github.com/drakosha/whisper-xdna">whisper-xdna</a>, <a href="https://github.com/Xilinx/mlir-aie">MLIR-AIE</a>, <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>. Apache-2.0.</footer>
+  <footer><span class="en">Built on</span><span class="zh">基于</span> <a href="https://github.com/FunAudioLLM/CosyVoice">CosyVoice</a>, <a href="https://github.com/drakosha/whisper-xdna">whisper-xdna</a>, <a href="https://github.com/Xilinx/mlir-aie">MLIR-AIE</a>, <a href="https://github.com/ggml-org/llama.cpp">llama.cpp</a>. Apache-2.0.<div class="credit">Made by <a href="https://www.yuhuachen.com">Yuhua Chen</a> with <span role="img" aria-label="love">❤️</span></div></footer>
 </main>
 </body>
 </html>

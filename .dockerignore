@@ -1,9 +1,12 @@
-.git
-third_party
-aot
-weights
-pretrained_models
-**/__pycache__
-**/*.so
-*.gguf
-*.wav
+# Explicit build context: personal data and documentation never enter image layers.
+**
+!Makefile
+!LICENSE
+!NOTICE
+!csrc/*.c
+!csrc/*.cpp
+!npu_cosyvoice/*.py
+!scripts/compile_xclbin.py
+!voice/*.py
+!voice/setup.sh
+!voice/requirements.txt
