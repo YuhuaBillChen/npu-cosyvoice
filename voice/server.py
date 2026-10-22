@@ -48,6 +48,10 @@ FLOW_THREADS = int(os.environ.get("FLOW_THREADS", "4"))
 PORT = int(os.environ.get("PORT", "8000"))
 # clients such as Open WebUI send no speed; this is used when a request has none
 DEFAULT_SPEED = float(os.environ.get("DEFAULT_SPEED", "1.0"))
+# the endpoint has no authentication; these keep one client from filling memory or the queue
+STT_MAX_BYTES = 25 * 1024 * 1024  # OpenAI's limit for this endpoint
+STT_MAX_PENDING = 4
+STT_PENDING = 0
 INSTRUCT = "You are a helpful assistant.<|endofprompt|>"
 FORMATS = {"mp3": ("audio/mpeg", ["-f", "mp3", "-b:a", "128k"]),
            "opus": ("audio/ogg", ["-f", "ogg", "-c:a", "libopus", "-b:a", "48k"]),
@@ -167,9 +171,28 @@ def speech(req: Speech):
 
 @app.post("/v1/audio/transcriptions")
 async def transcriptions(request: Request):
+    global STT_PENDING
     if not STT_URL:
         raise HTTPException(503, "no speech-to-text service configured (start the bundle with --profile stt)")
-    body = await request.body()
+    if int(request.headers.get("content-length") or 0) > STT_MAX_BYTES:
+        raise HTTPException(413, "audio request too large")
+    if STT_PENDING >= STT_MAX_PENDING:
+        raise HTTPException(429, "speech-to-text service busy")
+    STT_PENDING += 1
+    try:
+        return await forward_transcription(request)
+    finally:
+        STT_PENDING -= 1
+
+
+async def forward_transcription(request):
+    chunks, size = [], 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > STT_MAX_BYTES:
+            raise HTTPException(413, "audio request too large")
+        chunks.append(chunk)
+    body = b"".join(chunks)
     fwd = urllib.request.Request(f"{STT_URL}/v1/audio/transcriptions", data=body, method="POST",
                                  headers={"Content-Type": request.headers.get("content-type", "")})
 

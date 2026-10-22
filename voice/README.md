@@ -39,7 +39,8 @@ is this machine's LAN address or `host.docker.internal`, not `localhost`.)
 
 There is no authentication, so by default the port only listens on this machine. Set
 `VOICE_BIND=0.0.0.0` to open it to your network, and put a reverse proxy with authentication in
-front before exposing it beyond a trusted one.
+front before exposing it beyond a trusted one. Transcription uploads are limited to 25 MB and to 4
+in flight at a time (413 and 429 beyond that).
 
 ## Voices
 
@@ -63,8 +64,10 @@ reference, so an English reference reads English best.
 `STT_URL` points the transcription endpoint at another whisper-compatible server instead.
 
 `setup` downloads the CosyVoice3 checkpoint from ModelScope and the prebuilt int8 weights, LM GGUF and
-NPU kernel from [Hugging Face](https://huggingface.co/billchen42/npu-cosyvoice) (checksummed). With
-`PREBUILT_REPO=` (empty), or if the checkpoint differs from the tested one, it builds those three locally
+NPU kernel from [Hugging Face](https://huggingface.co/billchen42/npu-cosyvoice). Every file is
+checked against hashes in this repository before anything loads it: a checkpoint that differs from
+the tested one stops setup, and prebuilt files that do not match are discarded. With
+`PREBUILT_REPO=` (empty), or when the prebuilt download fails, it builds those three locally
 instead (~15 min of CPU); they are deterministic either way.
 
 If the NPU fails to resume from runtime suspend under memory pressure, see Notes in the main README.

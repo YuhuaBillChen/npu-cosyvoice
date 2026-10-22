@@ -32,6 +32,10 @@ RUN git clone --quiet https://github.com/FunAudioLLM/CosyVoice.git /opt/CosyVoic
 COPY . /opt/npu-cosyvoice
 RUN make all
 ENV PYTHONPATH=/opt/CosyVoice:/opt/CosyVoice/third_party/Matcha-TTS:/opt/npu-cosyvoice PATH=/opt/venv/bin:$PATH
+# the base image's labels name whisper-xdna; these name this repository (GHCR links the package to it)
+LABEL org.opencontainers.image.source=https://github.com/YuhuaBillChen/npu-cosyvoice \
+      org.opencontainers.image.description="CosyVoice3 text-to-speech on the AMD XDNA1 NPU, with an OpenAI-compatible speech API" \
+      org.opencontainers.image.licenses=Apache-2.0
 CMD ["/opt/venv/bin/python", "voice/server.py"]
 
 # whisper-xdna's STT server (published image, unmodified) with voice/whisper_entry.py, which caps its
@@ -40,6 +44,9 @@ FROM ghcr.io/drakosha/npu-whisper@sha256:04291377e5266717ecb9e5c889378e93d798d5b
 COPY voice/whisper_entry.py /voice/whisper_entry.py
 ENV PYTHONPATH=/usr/lib/python3/dist-packages \
     PEANO_INSTALL_DIR=/opt/mlir-aie/ironenv/lib/python3.13/site-packages/llvm-aie
+LABEL org.opencontainers.image.source=https://github.com/YuhuaBillChen/npu-cosyvoice \
+      org.opencontainers.image.description="whisper-xdna speech-to-text on the AMD XDNA1 NPU, packaged by npu-cosyvoice" \
+      org.opencontainers.image.licenses=Apache-2.0
 CMD ["/opt/npu-whisper/refenv/bin/python", "-u", "/voice/whisper_entry.py"]
 
 # the library's own image (the default target): toolchain only, the checkout is mounted

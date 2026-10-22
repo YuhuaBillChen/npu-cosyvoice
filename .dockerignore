@@ -9,4 +9,5 @@
 !scripts/compile_xclbin.py
 !voice/*.py
 !voice/setup.sh
+!voice/cosyvoice3.sha256
 !voice/requirements.txt
